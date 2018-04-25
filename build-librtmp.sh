@@ -19,14 +19,14 @@
 #  limitations under the License.
 #
 ###########################################################################
-#  Change values here													                            #
-#																		                                      #
-SDKVERSION="7.1"														                              #
-#																		                                      #
+#  Change values here                                                                                #
+#                                                                                                              #
+SDKVERSION="11.2"                                                                                      #
+#                                                                                                              #
 ###########################################################################
-#																		                                      #
-# Don't change anything under this line!								                  #
-#																		                                      #
+#                                                                                                              #
+# Don't change anything under this line!                                                  #
+#                                                                                                              #
 ###########################################################################
 
 CURRENTPATH=`pwd`
@@ -51,15 +51,6 @@ fi
 # Check whether openssl has already installed on the machine or not.
 # libcrypt.a / libssl.a
 
-set -e
-echo 'Check openssl installation'
-if [ -f "${LIBPATH}/libcrypto.a" ] && [ -f "${LIBPATH}/libssl.a" ] && [ -d "${INCLUDEPATH}/openssl" ]; then
-  echo 'Openssl for iOS has already installed, no need to install openssl'
-else
-  echo 'Openssl for iOS not found, will install openssl for iOS'
-  ./build-libssl.sh
-  echo 'Succeeded to install openssl'
-fi
 
 # Download librtmp source code from git repository
 # We assuem the user already installed git client.
@@ -77,41 +68,42 @@ for ARCH in ${ARCHS}
 do
   if [ "${ARCH}" == "i386" ] || [ "${ARCH}" == "x86_64" ];
   then
-  	PLATFORM="iPhoneSimulator"
-  else  
-  	PLATFORM="iPhoneOS"
+      PLATFORM="iPhoneSimulator"
+  else
+      PLATFORM="iPhoneOS"
   fi
-  
+
   export CROSS_TOP="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
   export CROSS_SDK="${PLATFORM}${SDKVERSION}.sdk"
   export BUILD_TOOLS="${DEVELOPER}"
-  
+
   echo "Building librtmp for ${PLATFORM} ${SDKVERSION} ${ARCH}"
-	echo "Please wait..."
-	
-	# add arch to CC=
-	sed -ie "s!AR=\$(CROSS_COMPILE)ar!AR=/usr/bin/ar!" "Makefile"
-	sed -ie "/CC=\$(CROSS_COMPILE)gcc/d" "Makefile"
-	echo "CC=\$(CROSS_COMPILE)gcc -arch ${ARCH}" >> "Makefile"
-  
-	export CROSS_COMPILE="${DEVELOPER}/usr/bin/"  
-  export XCFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -I${INCLUDEPATH} -arch ${ARCH}"
-      
+  echo "Please wait..."
+
+  # add arch to CC=
+  sed -ie "s!AR=\$(CROSS_COMPILE)ar!AR=/usr/bin/ar!" "Makefile"
+  sed -ie "/CC=\$(CROSS_COMPILE)gcc/d" "Makefile"
+  echo "CC=\$(CROSS_COMPILE)gcc -arch ${ARCH}" >> "Makefile"
+
+  export CROSS_COMPILE="${DEVELOPER}/usr/bin/"
+  export XCFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -I${INCLUDEPATH} -arch ${ARCH} -fembed-bitcode"
+
   if [ "${ARCH}" == "i386" ] || [ "${ARCH}" == "x86_64" ];
   then
-  	export XLDFLAGS="-L${LIBPATH} -arch ${ARCH}"
+      export XLDFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -L${LIBPATH} -arch ${ARCH}"
   else
-  	export XLDFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -L${LIBPATH} -arch ${ARCH}"
+      export XLDFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -L${LIBPATH} -arch ${ARCH}"
   fi
-  
+
   OUTPATH="${BUILDPATH}/librtmp-${PLATFORM}${SDKVERSION}-${ARCH}.sdk"
   mkdir -p "${OUTPATH}"
   LOG="${OUTPATH}/build-librtmp.log"
-  
-  make SYS=darwin >> "${LOG}" 2>&1  
+
+  XCFLAGS="$XCFLAGS -I${CURRENTPATH}/../OpenSSL-for-iPhone/include/ "
+  make SYS=darwin >> "${LOG}" 2>&1
   make SYS=darwin prefix="${OUTPATH}" install  >> "${LOG}" 2>&1
   make clean >> "${LOG}" 2>&1
-  
+
   LIBRTMP_REPO+="${OUTPATH}/lib/${LIBRTMP} "
 done
 
