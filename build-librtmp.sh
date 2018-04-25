@@ -99,7 +99,7 @@ do
   mkdir -p "${OUTPATH}"
   LOG="${OUTPATH}/build-librtmp.log"
 
-  XCFLAGS="$XCFLAGS -I${CURRENTPATH}/../OpenSSL-for-iPhone/include/ "
+  XCFLAGS="$XCFLAGS -I${CURRENTPATH}/../../ssl/OpenSSL-for-iPhone/include/ "
   make SYS=darwin >> "${LOG}" 2>&1
   make SYS=darwin prefix="${OUTPATH}" install  >> "${LOG}" 2>&1
   make clean >> "${LOG}" 2>&1
