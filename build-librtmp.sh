@@ -34,9 +34,11 @@ ARCHS="i386 x86_64 armv7 armv7s arm64"
 LIBRTMPREPO="git://git.ffmpeg.org/rtmpdump"
 BUILDPATH="${CURRENTPATH}/build"
 LIBPATH="${CURRENTPATH}/lib"
+LIBSSLPATH="${CURRENTPATH}/../../ssl/OpenSSL-for-iPhone/lib/"
 INCLUDEPATH="${CURRENTPATH}/include"
 SRCPATH="${CURRENTPATH}/src"
 LIBRTMP="librtmp.a"
+LIBSSL="libssl.a"
 DEVELOPER=`xcode-select -print-path`
 
 if [ ! -d "$DEVELOPER" ]; then
@@ -90,9 +92,9 @@ do
 
   if [ "${ARCH}" == "i386" ] || [ "${ARCH}" == "x86_64" ];
   then
-      export XLDFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -L${LIBPATH} -arch ${ARCH}"
+      export XLDFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -L${LIBPATH} -L${LIBSSLPATH} -arch ${ARCH}"
   else
-      export XLDFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -L${LIBPATH} -arch ${ARCH}"
+      export XLDFLAGS="-isysroot ${CROSS_TOP}/SDKs/${CROSS_SDK} -miphoneos-version-min=7.0 -L${LIBPATH} -L${LIBSSLPATH} -arch ${ARCH}"
   fi
 
   OUTPATH="${BUILDPATH}/librtmp-${PLATFORM}${SDKVERSION}-${ARCH}.sdk"
@@ -107,8 +109,11 @@ do
   LIBRTMP_REPO+="${OUTPATH}/lib/${LIBRTMP} "
 done
 
+mkdir lib/
+
 echo "Build universal library..."
 lipo -create ${LIBRTMP_REPO}-output ${LIBPATH}/${LIBRTMP}
+exit
 
 mkdir -p ${INCLUDEPATH}
 cp -R ${BUILDPATH}/librtmp-iPhoneSimulator${SDKVERSION}-i386.sdk/include/ ${INCLUDEPATH}/
@@ -118,3 +123,4 @@ echo "Cleaning up..."
 
 rm -rf ${SRCPATH}/rtmpdump
 echo "Done."
+
