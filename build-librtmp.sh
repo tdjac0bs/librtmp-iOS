@@ -21,7 +21,7 @@
 ###########################################################################
 #  Change values here                                                                                #
 #                                                                                                              #
-SDKVERSION="11.3"                                                                                      #
+SDKVERSION=`xcodebuild -showsdks 2>&1 | grep "iOS [0-9]" | head -n 1 | awk '{print $2}'`                                                                                      #
 #                                                                                                              #
 ###########################################################################
 #                                                                                                              #
@@ -123,4 +123,3 @@ echo "Cleaning up..."
 
 rm -rf ${SRCPATH}/rtmpdump
 echo "Done."
-
